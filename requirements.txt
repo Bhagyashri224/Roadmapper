@@ -1,2 +1,2 @@
 streamlit
-ctransformers
+requests
