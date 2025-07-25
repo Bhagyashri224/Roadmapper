@@ -1,29 +1,29 @@
 import streamlit as st
-from ctransformers import AutoModelForCausalLM
+import requests
+import os
 
-# Load the Llama-2 model
-@st.cache_resource
-def load_model():
-    return AutoModelForCausalLM.from_pretrained(
-        "model",
-        model_file="llama-2-7b-chat.ggmlv3.q4_0.bin",
-        model_type="llama",
-        config={"max_new_tokens": 512, "temperature": 0.7}
-    )
+# Set your Hugging Face API token (use secrets for real deployments)
+API_TOKEN = st.secrets["HUGGINGFACE_API_KEY"]
+API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
 
-model = load_model()
+headers = {"Authorization": f"Bearer {API_TOKEN}"}
+
+def query(payload):
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
 
 # Streamlit UI
-st.title("🗺️ Roadmap Generator – Llama2 Powered Tool")
+st.title("🗺️ Roadmap Generator – Hugging Face Powered Tool")
 st.subheader("Enter a skill you want to learn:")
 
-user_input = st.text_input("Skill", placeholder="e.g. Machine Learning")
+user_input = st.text_input("Skill", placeholder="e.g. Natural Language Processing")
 
 if st.button("Generate Roadmap"):
     if user_input:
         with st.spinner("Generating roadmap..."):
-            prompt = f"Generate a step-by-step learning roadmap for mastering {user_input}. Include free resources."
-            output = model(prompt)
+            prompt = f"Create a personalized step-by-step roadmap to master the skill '{user_input}'. Include free learning resources."
+            response = query({"inputs": prompt})
+            output = response[0]["generated_text"] if isinstance(response, list) else str(response)
             st.markdown("### 📚 Personalized Roadmap")
             st.markdown(output)
     else:
